@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>Hello Flask</h1>
+{% endblock %}
+
+{% block content %}
+{% if persons.any() %}
+<h1>Survivants {{ count }}</h1>
+<table>
+{% for survived, sex, cl in persons %}
+    <tr>
+        <td>Sex : {{ sex }}</td>
+        <td>Class : {{ cl }}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endif %}
+{% endblock %}
