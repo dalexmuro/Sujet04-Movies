@@ -3,11 +3,31 @@ import base64
 from io import BytesIO
 
 import pandas as pd
-import matplotlib
-# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import seaborn as sns
+from ast import literal_eval
+import matplotlib.patches as mpatches
 
-df_cdrs = pd.DataFrame(pd.read_csv("data/highest_hollywood_grossing_movies.csv"))
+df_movies = pd.DataFrame(pd.read_csv("data/highest_hollywood_grossing_movies.csv")).iloc[:, 1:]
+
+def convert_in_min(row):
+    time = row["Movie Runtime"].split(" ")
+    hours_in_min = int(time[0]) * 60 
+    
+    if len(time) >= 3:
+        hours_in_min += int(time[2])
+    # try:
+    #     hours_in_min += int(time[2])
+    # except:
+    #     pass
+    row["Movie Runtime"] = hours_in_min
+    return row
+
+df_movies = df_movies.apply(convert_in_min, axis=1)
+
+df_movies["Release Date"] = pd.to_datetime(df_movies["Release Date"], format="%B %d, %Y")
+
+df_movies["Genre"] = df_movies["Genre"].apply(literal_eval)
 
 app = Flask(__name__)
 
@@ -17,22 +37,51 @@ def index():
     # df_cdrs.tail()
     return "Hello world !"
 
-# @app.route("/line")
-# def test():
-#     fig = plt.Figure()
-#     fig.set_canvas(plt.gcf().canvas)
-#     ax = fig.subplots()
-#     ax.plot([1, 2])
-#     # Save it to a temporary buffer.
-#     buf = BytesIO()
-#     print("buf", buf)
-#     fig.savefig(buf, format="png", dpi=100)
-#     print(fig)
-#     # Embed the result in the html output.
-#     data = base64.b64encode(buf.getbuffer()).decode("ascii")
-#     print("data", data)
+def plotDistByQuantity(groupedDistributor):
+    fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,10) )
+    
+    ax.bar(data=groupedDistributor, x=groupedDistributor.index, height="Quantity of movies")
+    ax = plt.xticks(rotation = 90);
 
-#     return f"<img src='data:image/png;base64,{data}'/>"
+    fig.savefig('./static/images/barAllDist.png', bbox_inches = 'tight')   # save the figure to file
+    plt.close(fig)
+    
+    # Embed the result in the html output.
+    return "static/images/barplotDist.png"
+
+def plotDistBySales(groupedDistributor):
+    fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,10) )
+    
+    ax.bar(data=groupedDistributor, x=groupedDistributor.index, height="Average sales by movies")
+    ax = plt.xticks(rotation = 90);
+
+    fig.savefig('./static/images/barAllDistBySales.png', bbox_inches = 'tight')   # save the figure to file
+    plt.close(fig)
+    
+    # Embed the result in the html output.
+    return "static/images/barAllDistBySales.png"
+    
+
+@app.route('/distributors')
+def dist():
+    grouped = df_movies.groupby("Distributor")
+    groupedDistributor = grouped.sum()
+    groupedDistributor["Quantity of movies"] = grouped.size()
+    groupedDistributor["Average sales by movies"] = groupedDistributor["World Sales (in $)"] / groupedDistributor["Quantity of movies"]
+    
+    pathQuantity = plotDistByQuantity(groupedDistributor)
+    pathSales = plotDistBySales(groupedDistributor)
+
+    return render_template('distributors.html',
+                            data={'quantity' : {'title' : 'Quantité de films par distributeurs',
+                                                'path': pathQuantity
+                                                },
+                                  'sales' : {'title' : 'Ventes totales de films par distributeurs',
+                                                'path': pathSales
+                                                }
+                                   }
+                            )
+
 
 # @app.route("/titanic/<survived>", methods=("POST", "GET"))
 # def album(survived=None):

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>Analyse du Top 1000 des films par rapport aux distributeurs</h1>
+{% endblock %}
+
+{% block content %}
+{% if data|length > 0 %}
+{% for i, v in data.items() %}
+    <h2>{{ v.title }}</h2>
+    <img src={{v.path}} />
+{% endfor %}
+{% endif %}
+{% endblock %}
