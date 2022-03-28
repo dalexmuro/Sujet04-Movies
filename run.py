@@ -1,25 +1,19 @@
 from flask import Flask, render_template
-import base64
-from io import BytesIO
-
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from ast import literal_eval
-import matplotlib.patches as mpatches
+import random
 
 df_movies = pd.DataFrame(pd.read_csv("data/highest_hollywood_grossing_movies.csv")).iloc[:, 1:]
 
+# Data cleaning
 def convert_in_min(row):
     time = row["Movie Runtime"].split(" ")
     hours_in_min = int(time[0]) * 60 
     
     if len(time) >= 3:
         hours_in_min += int(time[2])
-    # try:
-    #     hours_in_min += int(time[2])
-    # except:
-    #     pass
+
     row["Movie Runtime"] = hours_in_min
     return row
 
@@ -33,26 +27,39 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    # df_cdrs.head()
-    # df_cdrs.tail()
-    return "Hello world !"
+    return render_template(
+        'home.html',
+        data={'msg': "Hello world !"}
+    )
 
-def plotDistByQuantity(groupedDistributor):
+def plotDistByQuantity(groupedDistributor, count):
     fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,10) )
+
+    rgb = [(0.5, random.random(), random.random()) for x in range(count)]
     
-    ax.bar(data=groupedDistributor, x=groupedDistributor.index, height="Quantity of movies")
+    ax.bar(data=groupedDistributor, x=groupedDistributor.index, height="Quantity of movies", color=rgb)
     ax = plt.xticks(rotation = 90);
 
     fig.savefig('./static/images/barAllDist.png', bbox_inches = 'tight')   # save the figure to file
     plt.close(fig)
+
+    distMostMovies = groupedDistributor.sort_values("Quantity of movies", ascending=False)[:6]
+
+
+    legend = f"Les 6 plus gros distributeurs qui sont : {', '.join(distMostMovies.index)} ont plus de {round(distMostMovies['Quantity of movies'].sum() / 1000 * 100, 2)}% des films dans le top 1000."
     
     # Embed the result in the html output.
-    return "static/images/barplotDist.png"
+    return {
+        "img": "static/images/barAllDist.png",
+        "legend": legend
+    }
 
-def plotDistBySales(groupedDistributor):
+def plotDistBySales(groupedDistributor, count):
     fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,10) )
+
+    rgb = [(0, random.random(), random.random()) for x in range(count)]
     
-    ax.bar(data=groupedDistributor, x=groupedDistributor.index, height="Average sales by movies")
+    ax.bar(data=groupedDistributor, x=groupedDistributor.index, height="Average sales by movies", color=rgb)
     ax = plt.xticks(rotation = 90);
 
     fig.savefig('./static/images/barAllDistBySales.png', bbox_inches = 'tight')   # save the figure to file
@@ -69,18 +76,21 @@ def dist():
     groupedDistributor["Quantity of movies"] = grouped.size()
     groupedDistributor["Average sales by movies"] = groupedDistributor["World Sales (in $)"] / groupedDistributor["Quantity of movies"]
     
-    pathQuantity = plotDistByQuantity(groupedDistributor)
-    pathSales = plotDistBySales(groupedDistributor)
+    count = len(groupedDistributor.index)
+    pathQuantity = plotDistByQuantity(groupedDistributor, count)
+    pathSales = plotDistBySales(groupedDistributor, count)
 
-    return render_template('distributors.html',
-                            data={'quantity' : {'title' : 'Quantité de films par distributeurs',
-                                                'path': pathQuantity
-                                                },
-                                  'sales' : {'title' : 'Ventes totales de films par distributeurs',
-                                                'path': pathSales
-                                                }
-                                   }
-                            )
+    return render_template('distributors.html', data={
+        'quantity' : {
+            'title' : 'Quantité de films par distributeurs',
+            'path': pathQuantity["img"],
+            'legend': pathQuantity["legend"]
+        },
+        'sales' : {
+            'title' : 'Ventes totales de films par distributeurs',
+            'path': pathSales
+        }
+    })
 
 
 # @app.route("/titanic/<survived>", methods=("POST", "GET"))
