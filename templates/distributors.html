@@ -7,8 +7,15 @@
 {% block content %}
 {% if data|length > 0 %}
 {% for i, v in data.items() %}
+<article class="visual-dist">
     <h2>{{ v.title }}</h2>
-    <img src={{v.path}} />
+    <div class="container mw-60">
+        <figure class="figure">
+            <img class="figure-img img-fluid" src={{v.path}} />
+            <figcaption class="figure-caption">{{v.legend}}</figcaption>
+        </figure>
+    </div>
+</article>
 {% endfor %}
 {% endif %}
 {% endblock %}

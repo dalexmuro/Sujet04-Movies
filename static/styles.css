@@ -1,51 +1,32 @@
 body {
   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 }
-a,
-h1,
-h2 {
-  color: #377ba8;
-}
-h1,
-h2 {
-  margin: 0;
-}
+
 h1 {
-  border-bottom: 2px solid #eee;
+  color: rgba(255,255,255,.55);
 }
+
+h2 {
+  margin-top: 20px;
+  text-align: center;
+  color: rgba(0,0,0,.55);
+}
+
+h1,
+h2 {
+  margin-left: 20px;
+}
+
 h2 {
   font-size: 1.2em;
 }
 
-table.dataframe,
-.dataframe th,
-.dataframe td {
-  border: none;
-  border-bottom: 1px solid #c8c8c8;
-  border-collapse: collapse;
-  text-align: left;
-  padding: 10px;
-  margin-bottom: 40px;
-  font-size: 0.9em;
+a {
+  margin-left: 20px;
 }
 
-.male th {
-  background-color: #add8e6;
-  color: white;
-}
-
-.female th {
-  background-color: #77dd77;
-  color: white;
-}
-
-tr:nth-child(odd) {
-  background-color: #eee;
-}
-tr:nth-child(even) {
-  background-color: #fff;
-}
-
-tr:hover {
-  background-color: #ffff99;
+.visual-dist{
+  width:80%;
+  margin: auto;
+  border-bottom: 1px solid rgba(0,0,0,.55);
 }
