@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 import pandas as pd
 import matplotlib.pyplot as plt
 from ast import literal_eval
@@ -27,6 +27,10 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
+    return redirect(url_for('home'))
+
+@app.route('/home')
+def home():
     return render_template(
         'home.html',
         data={'msg': "Hello world !"}
@@ -84,27 +88,29 @@ def dist():
         'quantity' : {
             'title' : 'Quantité de films par distributeurs',
             'path': pathQuantity["img"],
-            'legend': pathQuantity["legend"]
+            'legend': pathQuantity["legend"],
+            'link' : 'quantity'
         },
         'sales' : {
             'title' : 'Ventes totales de films par distributeurs',
-            'path': pathSales
+            'path': pathSales,
+            'link' : 'sales'
         }
     })
 
+@app.route('/films')
+def films():
+    return render_template(
+        'films.html',
+        data={'msg': "Films !"}
+    )
 
-# @app.route("/titanic/<survived>", methods=("POST", "GET"))
-# def album(survived=None):
-#     survived = int(survived)
-#     mask = (titanic.survived == survived)
-
-#     print(titanic[mask].values)
-
-#     return render_template('index.html',
-#                            count=mask.sum(),
-#                            persons=titanic[mask].values,
-#                            titles=titanic.columns.values
-#                            )
+@app.route('/genres')
+def genres():
+    return render_template(
+        'genres.html',
+        data={'msg': "Genres !"}
+    )
 
 @app.cli.command()
 def init():

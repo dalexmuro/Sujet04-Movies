@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1 class="navbar-brand navbar-logo">Analyse du Top 1000 des films par rapport aux distributeurs</h1>
+{% endblock %}
+
+{% block content %}
+{% if data|length > 0 %}
+{% for i, v in data.items() %}
+<article class="visual-dist">
+    <h2>{{ v.title }}</h2>
+    <div class="container mw-60">
+        <figure class="figure">
+            <img class="figure-img img-fluid" src={{v.path}} />
+            <figcaption class="figure-caption">{{v.legend}}</figcaption>
+        </figure>
+    </div>
+</article>
+{% endfor %}
+{% endif %}
+{% endblock %}
