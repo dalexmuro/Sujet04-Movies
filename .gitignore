@@ -1,2 +1,6 @@
 /env
 start.sh
+/static/images
+/__pycache__
+launch.sh
+start.bat
