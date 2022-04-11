@@ -35,6 +35,8 @@ h2 {
 body{
 	font-family: 'Nunito', sans-serif;
 	background-color: whitesmoke;
+}
+header {
 	overflow: hidden;
 }
 * {
@@ -149,7 +151,6 @@ main{
 	position: relative;
 	width: 100%;
 	bottom: 0;
-	overflow-y: scroll;
 }
 .trans
 {

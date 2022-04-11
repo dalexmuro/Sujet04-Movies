@@ -69,8 +69,13 @@ def plotDistBySales(groupedDistributor, count):
     fig.savefig('./static/images/barAllDistBySales.png', bbox_inches = 'tight')   # save the figure to file
     plt.close(fig)
     
+    legend = "text"
+    
     # Embed the result in the html output.
-    return "static/images/barAllDistBySales.png"
+    return {
+        "img": "static/images/barAllDistBySales.png",
+        "legend": legend 
+        }
     
 
 @app.route('/distributors')
@@ -93,7 +98,8 @@ def dist():
         },
         'sales' : {
             'title' : 'Ventes totales de films par distributeurs',
-            'path': pathSales,
+            'path': pathSales["img"],
+            'legend': pathSales["legend"],
             'link' : 'sales'
         }
     })
