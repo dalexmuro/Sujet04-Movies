@@ -1,9 +1,39 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1 class="navbar-brand navbar-logo">Genres</h1>
+<h1 class="navbar-brand navbar-logo">Analyse du Top 1000 des films par rapport aux genres</h1>
 {% endblock %}
 
 {% block content %}
-<p>msg</p>
+{% if data|length > 0 %}
+{% for i, v in data.items() %}
+<table class="table-content">
+    <tr>
+        <td class="col-sm-8 text-danger">{{v.legend}}</td>
+        <td class="col-sm-4">
+            <div class="container">
+                <div class="top">
+                    <ul>
+                        <li>
+                            <a href="#img_{{v.link}}"><img src={{v.path}}></a>
+                        </li>
+                    </ul>
+                    <a href="#_{{v.link}}" class="lightbox trans" id="img_{{v.link}}">
+                        <figure class="figure">
+                            <img src={{v.path}} />
+                            <figcaption class="figure-caption">{{v.legend}}</figcaption>
+                        </figure>
+                    </a>
+                </div>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <h2 class="text-center text-danger display-7 font-weight-bold">{{ v.title }}</h2>
+        </td>
+    </tr>
+</table>
+{% endfor %}
+{% endif %}
 {% endblock %}
