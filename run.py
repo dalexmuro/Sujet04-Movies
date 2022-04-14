@@ -1,4 +1,3 @@
-from turtle import width
 from flask import Flask, render_template, redirect, url_for
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -124,6 +123,10 @@ def films_quantity_by_year():
     
     plt.grid(axis='y')
 
+    plt.xticks(groupedByDate.index)
+    ax.set_xticks(groupedByDate.index[::2])
+    ax.set_xticklabels(groupedByDate.index[::2].astype(int), rotation=45)
+    
     plt.ylabel('Quantité de films')
 
     plt.margins(x=.01, tight=True)
