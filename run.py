@@ -1,3 +1,4 @@
+from turtle import width
 from flask import Flask, render_template, redirect, url_for
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,6 +6,10 @@ from ast import literal_eval
 import random
 import squarify
 import calendar
+import numpy as np
+import seaborn as sns
+import matplotlib.patches as mpatches
+
 
 df_movies = pd.DataFrame(pd.read_csv("data/highest_hollywood_grossing_movies.csv")).iloc[:, 1:]
 
@@ -39,15 +44,17 @@ def home():
     )
 
 def plotDistByQuantity(groupedDistributor, count):
-    fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,10) )
+    groupedDistributor = groupedDistributor.sort_values("Quantity of movies", ascending=False)
+
+    fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,20) )
 
     rgb = [(0.5, random.random(), random.random()) for x in range(count)]
     
-    ax.bar(data=groupedDistributor, x=groupedDistributor.index, height="Quantity of movies", color=rgb)
-    ax = plt.xticks(rotation = 90);
+    ax.barh(data=groupedDistributor, width="Quantity of movies", y=groupedDistributor.index, color=rgb)
+
+    plt.margins(y=.01, tight=True)
 
     fig.savefig('./static/images/barAllDist.png', bbox_inches = 'tight')   # save the figure to file
-    plt.close(fig)
 
     distMostMovies = groupedDistributor.sort_values("Quantity of movies", ascending=False)[:6]
 
@@ -61,19 +68,20 @@ def plotDistByQuantity(groupedDistributor, count):
     }
 
 def plotDistBySales(groupedDistributor, count):
-    fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,10) )
+    groupedDistributor = groupedDistributor.sort_values("Average sales by movies", ascending=False)
+
+    fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,20) )
 
     rgb = [(0, random.random(), random.random()) for x in range(count)]
     
-    ax.bar(data=groupedDistributor, x=groupedDistributor.index, height="Average sales by movies", color=rgb)
-    ax = plt.xticks(rotation = 90);
+    ax.barh(data=groupedDistributor, width="Average sales by movies", y=groupedDistributor.index, color=rgb)
+
+    plt.margins(y=.01, tight=True)
 
     fig.savefig('./static/images/barAllDistBySales.png', bbox_inches = 'tight')   # save the figure to file
-    plt.close(fig)
     
     legend = "text"
     
-    # Embed the result in the html output.
     return {
         "img": "static/images/barAllDistBySales.png",
         "legend": legend 
@@ -112,15 +120,18 @@ def films_quantity_by_year():
 
     groupedByDate = df_movies.groupby(df_movies["Release Date"].dt.year).size()
 
-    ax = plt.plot(groupedByDate.index, groupedByDate.values);
+    ax.bar(x=groupedByDate.index, height=groupedByDate.values)
+    
+    plt.grid(axis='y')
+
+    plt.ylabel('Quantité de films')
+
+    plt.margins(x=.01, tight=True)
 
     fig.savefig('./static/images/filmsQuantityByYear.png', bbox_inches = 'tight')
-
-    plt.close(fig)
     
     legend = "Quantité de film par année"
     
-    # Embed the result in the html output.
     return {
         "img": "static/images/filmsQuantityByYear.png",
         "legend": legend 
@@ -173,20 +184,55 @@ def films():
     )
 
 
-def films_quantity_by_genres():
-    fig, ax = plt.subplots( nrows=1, ncols=1, figsize=(20,10) )
+def films_quantity_by_genres(genres):
+    fig = plt.figure(figsize=(20,10))
 
-    genres = pd.DataFrame(df_movies["Genre"].explode().value_counts()).rename(columns={'Genre': 'Quantity'})
+    ax = plt.subplot(111, polar=True)
 
-    circle = plt.Circle((0,0), 0.7, color='white')
+    plt.axis('off')
 
-    explode = [0.1 if v == "Adventure" else 0 for v in genres.index]
+    lowerLimit = 30
 
-    ax.pie(genres.Quantity, labels=genres.index, explode=explode, autopct='%1.1f%%', wedgeprops = { 'linewidth' : 2, 'edgecolor' : 'white' });
+    max = genres.Quantity.max()
 
-    p = plt.gcf()
+    slope = (max - lowerLimit) / max
 
-    p.gca().add_artist(circle);
+    heights = slope * genres.Quantity + lowerLimit
+
+    width = 2*np.pi / len(genres.index)
+
+    indexes = list(range(1, len(genres.index)+1))
+    angles = [element * width for element in indexes]
+
+
+    bars = ax.bar(
+        x=angles, 
+        height=heights, 
+        width=width, 
+        bottom=lowerLimit,
+        linewidth=2, 
+        edgecolor="white")
+
+    labelPadding = 4
+
+    for bar, angle, height, label in zip(bars,angles, heights, genres.index):
+        rotation = np.rad2deg(angle)
+
+        alignment = ""
+        if angle >= np.pi/2 and angle < 3*np.pi/2:
+            alignment = "right"
+            rotation = rotation + 180
+        else: 
+            alignment = "left"
+
+        ax.text(
+            x=angle, 
+            y=lowerLimit + bar.get_height() + labelPadding, 
+            s=label, 
+            ha=alignment, 
+            va='center', 
+            rotation=rotation, 
+            rotation_mode="anchor");
 
     fig.savefig('./static/images/filmsQuantityByGenres.png', bbox_inches = 'tight')
 
@@ -200,17 +246,44 @@ def films_quantity_by_genres():
     }
 
 
-# def sales_by_genres():
-#     genres['Domestic Sales'] = [df_movies[df_movies["Genre"].apply(lambda x : genre in x)]['Domestic Sales (in $)'].sum() for genre in genres.index]
-#     genres['International Sales'] = [df_movies[df_movies["Genre"].apply(lambda x : genre in x)]['International Sales (in $)'].sum() for genre in genres.index]
-#     genres['World Sales'] = [df_movies[df_movies["Genre"].apply(lambda x : genre in x)]['World Sales (in $)'].sum() for genre in genres.index]
+def films_sales_by_genres(genres):
+    genres['Domestic Sales'] = [df_movies[df_movies["Genre"].apply(lambda x : genre in x)]['Domestic Sales (in $)'].sum() for genre in genres.index]
+    genres['International Sales'] = [df_movies[df_movies["Genre"].apply(lambda x : genre in x)]['International Sales (in $)'].sum() for genre in genres.index]
+    genres['World Sales'] = [df_movies[df_movies["Genre"].apply(lambda x : genre in x)]['World Sales (in $)'].sum() for genre in genres.index]
+
+    fig = plt.figure(figsize=(20, 10))
+
+    sns.barplot(x=genres.index,  y='World Sales', data=genres, color='yellow')
+    bar_domestic = sns.barplot(x=genres.index, y='Domestic Sales', data=genres, color='green')
+    bar_domestic.set_ylabel('Total World Sales')
+
+    top_bar = mpatches.Patch(color='yellow', label='International Sales')
+    bottom_bar = mpatches.Patch(color='green', label='Domestic Sales')
+    plt.legend(handles=[top_bar, bottom_bar])
+
+    plt.xticks(rotation = 90)
+
+    fig.savefig('./static/images/filmsSalesByGenres.png', bbox_inches = 'tight')
+
+    plt.close(fig)
+
+    legend = "Ventes de films par genres"
+
+    return {
+        "img": "static/images/filmsSalesByGenres.png",
+        "legend": legend 
+    }
         
 
 
 
 @app.route('/genres')
 def genres():
-    pathFilmsQuantityByGenres = films_quantity_by_genres()
+    genres = pd.DataFrame(df_movies["Genre"].explode().value_counts()).rename(columns={'Genre': 'Quantity'})
+
+    pathFilmsQuantityByGenres = films_quantity_by_genres(genres)
+    pathFilmsSalesByGenres = films_sales_by_genres(genres)
+
     return render_template(
         'genres.html',
         data={
@@ -219,6 +292,12 @@ def genres():
                 'path': pathFilmsQuantityByGenres['img'],
                 'legend': pathFilmsQuantityByGenres['legend'],
                 'link': 'filmsQuantityByGenres'
+            },
+            'filmsSalesByGenres': {
+                'title': 'Ventes de films par genres',
+                'path': pathFilmsSalesByGenres['img'],
+                'legend': pathFilmsSalesByGenres['legend'],
+                'link': 'filmsSalesByGenres'
             }
         }
     )
